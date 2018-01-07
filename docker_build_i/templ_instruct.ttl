@@ -1,0 +1,33 @@
+{# INstruct #}
+{#  埋込み用変数一覧
+	{{ message.SNo }}				#主語に付与する連番
+	{{ message.ProtAUniprot }}
+	{{ message.ProtBUniprot }}
+	{{ message.PfamDomainA }}
+	{{ message.PfamDomainB }}
+
+	{{ Publication.Comma }}		# 0:カンマ非出力, >1:カンマ出力
+  {{ Publication.DB }}			#HINTと同様
+  {{ Publication.evidencelevel }}	#エビデンスの有無(赤:true/黒:false) ※pdbのみ。Pubmedは空欄
+#}
+
+ins:{{ message.ProtAUniprot }}-{{ message.PfamDomainA }}_{{ message.ProtBUniprot }}-{{ message.PfamDomainB }}
+    pint:dataSource <http://instruct.yulab.org/> ;
+    pint:displayName "{{ message.ProtAUniprot }}-{{ message.ProtBUniprot }}"^^xsd:string ;
+    pint:evidence {% for Publication in message.Publications %}{% if Publication.Comma > 0 %},{% endif %} pint:evidence_{{ Publication.DB }}_{{ Publication.ID }}_{{　Publication.evidencelevel　}} {% endfor %} ;
+    pint:name "{{ message.ProtAUniprot }}-{{ message.ProtBUniprot }}"^^xsd:string ;
+    pint:participant  [
+        obo:BFO_0000051 uni:{{ message.ProtAUniprot }} ;
+        obo:BFO_0000051 pfm:{{ message.PfamDomainA }}
+      ] ;
+    pint:participant [
+        obo:BFO_0000051 uni:{{ message.ProtBUniprot }} ;
+        obo:BFO_0000051 pfm:{{ message.PfamDomainB }}
+      ] ;
+    a pint:MolecularInteraction .
+    
+    uni:{{ message.ProtAUniprot }}
+    pint:proteindomain pfm:{{ message.PfamDomainA }} .
+    
+    uni:{{ message.ProtBUniprot }}
+    pint:proteindomain pfm:{{ message.PfamDomainB }} .

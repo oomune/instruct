@@ -1,0 +1,31 @@
+{
+	"organism":{
+		"sapiens":{
+			"all":"sapiens.sin",
+			"annotations":"direct_homology.txt"
+		},
+		"elegans":{
+			"all":"elegans.sin"
+		},
+		"melanogaster":{
+			"all":"melanogaster.sin"
+		},
+		"musculus":{
+			"all":"musculus.sin"
+		},
+		"pombe":{
+			"all":"pombe.sin"
+		},
+		"thaliana":{
+			"all":"thaliana.sin"
+		}
+	},
+	"template":{
+		"prefix":"templ_instruct.ttl.prefix",
+		"body":"templ_instruct.ttl",
+		"evidence":"templ_instruct.ttl.evi"
+	},
+	"output_file":"instruct_sample.ttl",
+	"data_path":"data_i"
+
+}
