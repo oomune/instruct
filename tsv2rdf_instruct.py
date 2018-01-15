@@ -11,6 +11,7 @@ import logging.handlers
 import logging
 
 RDF_TEMPLATE='templ_instruct.ttl'
+EXEC_PATH = '/tmp'
 MOUNT_PATH = '/mnt'
 TEMPLATE_BODY = 'templ_instruct.ttl'
 TEMPLATE_EVI = 'templ_instruct.ttl.evi'
@@ -18,6 +19,12 @@ TEMPLATE_PREFIX = 'templ_instruct.ttl.prefix'
 
 class Message(object):
     def __init__(self, subject_no, data ):
+        '''
+        @param subject_no: Subject serial number
+        @param data: HiNT data (1 row)
+        @summary: Store HiNT data (1 row) in the Message object
+        '''
+        
         def get_db_name(publication):
 
             if publication.strip() == "Structural Genomics Consortium":
@@ -28,7 +35,7 @@ class Message(object):
             return db
 
 
-        self.SNo = subject_no               #主語の連番
+        self.SNo = subject_no               #Subject serial number
         self.ProtAUniprot = data["ProtA[uniprot]"]
         self.ProtBUniprot = data["ProtB[uniprot]"]
         self.ProtAOfficialSymbol = data["ProtA[Official Symbol]"]
@@ -50,20 +57,28 @@ class Message(object):
                              for evidence_no, publication in enumerate(data["PDB-structs"].split(';')) ]   #PDB
             self.Publications.extend(self.PDBs)
         else:
-            #PDB-structsが空の場合がある
+            #When PDB-structs is empty
             pass
 
         return
 
 class Publications(object):
     def __init__(self, comma, publication, db, row=None):
+        '''
+        @param comma: Variables for controlling output of commas when outputting multiple publications
+        @param publication: ID of document
+        @param db: database name
+        @param row: row data
+        @summary: Store multiple Publications in the Publications object
+        '''
 
-        self.Comma = comma      # 0: カンマなし >1:カンマあり
+
+        self.Comma = comma      # 0: No comma> 1: Comma present
         self.DB = db            # "pdb" or "pubmed" or "sgc"
         if db == "sgc":
-            self.ID = ""            #sgcの場合はIDなし
+            self.ID = ""        # No ID in the case of sgc
         else:
-            self.ID = publication   #sgc以外の場合は文献のID
+            self.ID = publication   # In cases other than sgc, the ID of the document
 
         if db == "pdb":
             if publication == row["Supporting_PDB_Structures"]:
@@ -89,7 +104,7 @@ def read_tsv(all, annotations, organism=None):
     else:
         annotationsDF=pd.DataFrame(columns=["Protein1","Protein2","Domain1","Domain2","Supporting_PDB_Structures"])
 
-    #allのカラム名に合わせる
+    #Fit column names
     annotationsDF.rename(columns={"Protein1" : "ProtA[uniprot]"}, inplace=True)
     annotationsDF.rename(columns={"Protein2" : "ProtB[uniprot]"}, inplace=True)
     annotationsDF.rename(columns={"Domain1" : "Pfam-domainA"}, inplace=True)
@@ -99,7 +114,7 @@ def read_tsv(all, annotations, organism=None):
 
     #mergedDF.to_excel("debug_inst_%s.xlsx" % organism)
 
-    #ProtA[Official Symbol]がNaN以外の行を抽出
+    #ProtA [Official Symbol] extracts rows other than NaN
     mergedDF = mergedDF[ ~mergedDF["ProtA[Official Symbol]"].isnull() ]
 
     return mergedDF
@@ -125,7 +140,7 @@ def main(fw, template, organism=None, all = None, annotations = None ):
 
         fw.write(FeedContent)
 
-    # テンプレートの読み込み(evidence)
+    # Read template (evidence)
     env = Environment(loader = FileSystemLoader(".", encoding='utf8'), autoescape = False)
     imageTemplate = env.get_template(template['evidence'])
 
@@ -145,20 +160,21 @@ if __name__ == '__main__':
     parser.add_option( "-c", type="string", help="config_file", dest="config", default= 'tsv2rdf_instruct.json')
     (options, args) = parser.parse_args()
 
-    #ログ関連の設置
+    #Log setting
     argvs = sys.argv
     LOG_FILENAME = '%s.log' % argvs[0].split('.')[0]
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',level=logging.DEBUG)
     logger = logging.getLogger()
 
-    #ファイルログ
+    #File log
     file_log = logging.handlers.RotatingFileHandler(filename=LOG_FILENAME)
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(logging.Formatter('%(asctime)s;%(levelname)s:%(message)s'))
 
-    #ハンドラの設定
+    #Log handler setting
     logging.getLogger().addHandler(file_log)
 
+    #Reading the configuration file
     f = open(options.config ,"r")
     config = json.load(f)
     logger.info("Organism: %s" % ",".join([ k for k,v in config['organism'].items() ]))
@@ -167,29 +183,29 @@ if __name__ == '__main__':
     template = config['template']
     data_path = config['data_path']
 
-    #出力先ファイル
+    #Output file
     if os.path.exists(output_file) != True:
         output_file = os.path.join(MOUNT_PATH, output_file)
         fw = open(output_file, 'w')
     else:
         fw = open(output_file, 'w')
 
-    #テンプレートファイルのチェック
+    #Check template file
     if os.path.exists(template['body']) != True:
-        template['body'] = os.path.join(MOUNT_PATH, template['body'])
-        logger.info("Set new template file path: %s" % template['body'])
+        template['body'] = os.path.join(EXEC_PATH, template['body'])
+        logger.info("Set template file path: %s" % template['body'])
     if os.path.exists(template['evidence']) != True:
-        template['evidence'] = os.path.join(MOUNT_PATH, template['evidence'])
-        logger.info("Set new template file path: %s" % template['evidence'])
+        template['evidence'] = os.path.join(EXEC_PATH, template['evidence'])
+        logger.info("Set template file path: %s" % template['evidence'])
     if os.path.exists(template['prefix']) != True:
-        template['prefix'] = os.path.join(MOUNT_PATH, template['prefix'])
-        logger.info("Set new template file path: %s" % template['prefix'])
+        template['prefix'] = os.path.join(EXEC_PATH, template['prefix'])
+        logger.info("Set template file path: %s" % template['prefix'])
 
     if os.path.exists(data_path) != True:
         data_path = os.path.join(MOUNT_PATH, data_path)
-        logger.info("Set new data_path: %s" % data_path)
+        logger.info("Set data_path: %s" % data_path)
 
-    #prefixの出力
+    #Output of prefix
     fp = open(template['prefix'], 'r')
     prefixes = fp.readlines()
     for prefix in prefixes:

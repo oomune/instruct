@@ -11,6 +11,7 @@ import logging.handlers
 import logging
 
 RDF_TEMPLATE='templ_instruct.ttl'
+EXEC_PATH = '/tmp'
 MOUNT_PATH = '/mnt'
 TEMPLATE_BODY = 'templ_instruct.ttl'
 TEMPLATE_EVI = 'templ_instruct.ttl.evi'
@@ -176,18 +177,18 @@ if __name__ == '__main__':
 
     #テンプレートファイルのチェック
     if os.path.exists(template['body']) != True:
-        template['body'] = os.path.join(MOUNT_PATH, template['body'])
-        logger.info("Set new template file path: %s" % template['body'])
+        template['body'] = os.path.join(EXEC_PATH, template['body'])
+        logger.info("Set template file path: %s" % template['body'])
     if os.path.exists(template['evidence']) != True:
-        template['evidence'] = os.path.join(MOUNT_PATH, template['evidence'])
-        logger.info("Set new template file path: %s" % template['evidence'])
+        template['evidence'] = os.path.join(EXEC_PATH, template['evidence'])
+        logger.info("Set template file path: %s" % template['evidence'])
     if os.path.exists(template['prefix']) != True:
-        template['prefix'] = os.path.join(MOUNT_PATH, template['prefix'])
-        logger.info("Set new template file path: %s" % template['prefix'])
+        template['prefix'] = os.path.join(EXEC_PATH, template['prefix'])
+        logger.info("Set template file path: %s" % template['prefix'])
 
     if os.path.exists(data_path) != True:
         data_path = os.path.join(MOUNT_PATH, data_path)
-        logger.info("Set new data_path: %s" % data_path)
+        logger.info("Set data_path: %s" % data_path)
 
     #prefixの出力
     fp = open(template['prefix'], 'r')
