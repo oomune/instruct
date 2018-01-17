@@ -97,12 +97,16 @@ def read_tsv(all, annotations, organism=None):
     '''
     import pandas as pd
 
-    allDF=pd.read_csv(all, delimiter="\t")
+    try:    
+        allDF=pd.read_csv(all, delimiter="\t")
 
-    if annotations is not None:
-        annotationsDF=pd.read_csv(annotations, delimiter="\t")
-    else:
-        annotationsDF=pd.DataFrame(columns=["Protein1","Protein2","Domain1","Domain2","Supporting_PDB_Structures"])
+        if annotations is not None:
+            annotationsDF=pd.read_csv(annotations, delimiter="\t")
+        else:
+            annotationsDF=pd.DataFrame(columns=["Protein1","Protein2","Domain1","Domain2","Supporting_PDB_Structures"])
+    except Exception as e:
+        logger.error("%s" % e.message)
+        sys.exit()   
 
     #Fit column names
     annotationsDF.rename(columns={"Protein1" : "ProtA[uniprot]"}, inplace=True)
@@ -175,6 +179,12 @@ if __name__ == '__main__':
     logging.getLogger().addHandler(file_log)
 
     #Reading the configuration file
+    try:
+        f = open(options.config ,"r")
+    except Exception as e:
+        logger.error("%s: %s" % (e.message,options.config))
+        sys.exit()
+    
     f = open(options.config ,"r")
     config = json.load(f)
     logger.info("Organism: %s" % ",".join([ k for k,v in config['organism'].items() ]))
@@ -184,7 +194,7 @@ if __name__ == '__main__':
     data_path = config['data_path']
 
     #Output file
-    if os.path.exists(output_file) != True:
+    if os.getcwd() == '/tmp':
         output_file = os.path.join(MOUNT_PATH, output_file)
         fw = open(output_file, 'w')
     else:
